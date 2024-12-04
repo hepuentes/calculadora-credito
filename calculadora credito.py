@@ -44,95 +44,6 @@ def calcular_seguro_vida(plazo, seguro_vida_base):
 # Configuración de la página
 st.set_page_config(page_title="Simulador de Crédito Loansi", layout="wide")
 
-# Estilos CSS
-st.markdown("""
-    <style>
-        .stSelectbox {
-            margin-top: 0.2rem !important;
-        }
-        
-        .stSelectbox > div > div {
-            pointer-events: auto;
-            background-color: transparent !important;
-            border: 1px solid #404040 !important;
-            color: inherit !important;
-            cursor: pointer;
-        }
-
-        .description-text {
-            font-size: 1.1rem !important;
-            margin: 0.8rem 0 !important;
-            line-height: 1.4 !important;
-        }
-
-        .value-description {
-            font-size: 1.1rem !important;
-            margin: 0.5rem 0 !important;
-        }
-
-        .plazo-text {
-            font-size: 1.2rem !important;
-            font-weight: 600 !important;
-            margin-bottom: 0.5rem !important;
-        }
-
-        .stSlider > div > div > div {
-            font-size: 1.2rem !important;
-        }
-
-        .currency-symbol {
-            font-size: 1.3rem;
-            margin-top: 0.7rem;
-            margin-left: 0.2rem;
-        }
-
-        .result-box {
-            background-color: rgba(0, 0, 0, 0.05);
-            border: 1px solid rgba(0, 0, 0, 0.1);
-            border-radius: 10px;
-            padding: 1.5rem;
-            margin: 1.5rem 0;
-            text-align: center;
-        }
-        
-        .result-text {
-            font-size: 1.2rem;
-            margin-bottom: 0.8rem;
-        }
-        
-        .result-amount {
-            font-size: 2.2rem;
-            font-weight: 700;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        }
-
-        .detail-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 0.75rem 0;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-            color: inherit;
-        }
-        
-        .disclaimer {
-            background-color: rgba(0, 0, 0, 0.03);
-            border-radius: 10px;
-            padding: 1.5rem;
-            margin-top: 2rem;
-            border: 1px solid rgba(0, 0, 0, 0.1);
-            color: inherit;
-        }
-
-        .disclaimer p {
-            font-size: 0.9rem;
-            line-height: 1.6;
-            margin: 0;
-            text-align: justify;
-            color: inherit;
-        }
-    </style>
-""", unsafe_allow_html=True)
-
 # Título principal
 st.title("Simulador de Crédito Loansi")
 
@@ -141,27 +52,24 @@ st.header("Selecciona la Línea de Crédito")
 tipo_credito = st.selectbox("", options=list(LINEAS_DE_CREDITO.keys()), index=0)
 detalles = LINEAS_DE_CREDITO[tipo_credito]
 
-st.markdown(f"<p class='description-text'>{detalles['descripcion']}</p>", unsafe_allow_html=True)
+st.markdown(f"**Descripción:** {detalles['descripcion']}")
 
 # Entrada del monto con símbolo de peso
 st.header("Escribe el valor del crédito")
-st.markdown(f"<p class='value-description'>Ingresa un valor entre $ {format_number(detalles['monto_min'])} y $ {format_number(detalles['monto_max'])} COP</p>", unsafe_allow_html=True)
+st.markdown(f"Ingrese un monto entre $ {format_number(detalles['monto_min'])} y $ {format_number(detalles['monto_max'])} COP:")
 
-col1, col2 = st.columns([0.5,20])
-with col1:
-    st.markdown('<div class="currency-symbol">$</div>', unsafe_allow_html=True)
-with col2:
-    monto = st.number_input("", 
-                           min_value=detalles["monto_min"],
-                           max_value=detalles["monto_max"],
-                           step=1000,
-                           value=detalles["monto_min"],
-                           format="%d")
+monto = st.number_input(
+    "Monto del crédito",
+    min_value=detalles["monto_min"],
+    max_value=detalles["monto_max"],
+    step=1000,
+    value=detalles["monto_min"],
+)
 
 # Slider de plazo
 if tipo_credito == "LoansiFlex":
     st.header("Plazo en Meses")
-    plazo = st.slider("", 
+    plazo = st.slider("Seleccione el plazo (en meses):", 
                      min_value=detalles["plazo_min"], 
                      max_value=detalles["plazo_max"], 
                      step=12,
@@ -169,7 +77,7 @@ if tipo_credito == "LoansiFlex":
     frecuencia_pago = "Mensual"
 else:
     st.header("Plazo en Semanas")
-    plazo = st.slider("", 
+    plazo = st.slider("Seleccione el plazo (en semanas):", 
                      min_value=detalles["plazo_min"], 
                      max_value=detalles["plazo_max"], 
                      step=1,
@@ -192,33 +100,19 @@ else:
 
 # Mostrar resultado
 st.markdown(f"""
-<div class="result-box">
-    <p class="result-text">Pagarás {plazo} cuotas por un valor aproximado de:</p>
-    <div class="result-amount">$ {format_number(cuota)} {frecuencia_pago}</div>
-</div>
-""", unsafe_allow_html=True)
+### Resultado:
+Pagarás {plazo} cuotas de aproximadamente:
+- **Monto por cuota:** $ {format_number(cuota)} {frecuencia_pago}
+""")
 
-# Detalles del crédito simplificados
-with st.expander("Ver Detalles del Crédito"):
-    detalles_orden = [
-        ("Dinero total desembolsado", f"$ {format_number(monto)} COP"),
-        ("Plazo", f"{plazo} {'meses' if tipo_credito == 'LoansiFlex' else 'semanas'}"),
-        ("Frecuencia de Pago", frecuencia_pago),
-        ("Tasa Efectiva Anual (E.A.)", f"{detalles['tasa_anual_efectiva']:.2f}%"),
-        ("Valor Cuota a Pagar", f"$ {format_number(cuota)} COP"),
-    ]
-    
-    for titulo, valor in detalles_orden:
-        st.markdown(f"""
-        <div class="detail-item">
-            <span class="detail-label">{titulo}</span>
-            <span class="detail-value">{valor}</span>
-        </div>
-        """, unsafe_allow_html=True)
+# Detalles del crédito
+st.subheader("Detalles del Crédito")
+st.write(f"**Monto solicitado:** $ {format_number(monto)} COP")
+st.write(f"**Plazo:** {plazo} {'meses' if tipo_credito == 'LoansiFlex' else 'semanas'}")
+st.write(f"**Frecuencia de Pago:** {frecuencia_pago}")
+st.write(f"**Tasa Efectiva Anual (E.A.):** {detalles['tasa_anual_efectiva']:.2f}%")
+st.write(f"**Valor total a financiar:** $ {format_number(total_financiar)} COP")
 
 # Disclaimer
-st.markdown("""
-<div class="disclaimer">
-    <p>Estos valores son aproximados, los cuales fueron calculados teniendo en cuenta una tasa de interés variable, así como los demás conceptos asociados al crédito, y representan una referencia para el usuario, por lo tanto, podrán variar de conformidad con el perfil crediticio del cliente y las políticas de aprobación del crédito establecidas por LOANSI.</p>
-</div>
-""", unsafe_allow_html=True)
+st.info("Estos valores son aproximados y pueden variar según las políticas de Loansi.")
+
