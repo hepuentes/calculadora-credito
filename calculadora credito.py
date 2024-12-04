@@ -49,70 +49,68 @@ st.title("Simulador de Crédito Loansi")
 
 # Selección de línea de crédito
 st.header("Selecciona la Línea de Crédito")
-tipo_credito = st.selectbox("", options=list(LINEAS_DE_CREDITO.keys()), index=0)
+tipo_credito = st.selectbox("Tipo de Crédito:", options=list(LINEAS_DE_CREDITO.keys()))
 detalles = LINEAS_DE_CREDITO[tipo_credito]
 
-st.markdown(f"**Descripción:** {detalles['descripcion']}")
+st.write(f"**Descripción:** {detalles['descripcion']}")
 
-# Entrada del monto con símbolo de peso
+# Entrada del monto con validación
 st.header("Escribe el valor del crédito")
-st.markdown(f"Ingrese un monto entre $ {format_number(detalles['monto_min'])} y $ {format_number(detalles['monto_max'])} COP:")
-
 monto = st.number_input(
-    "Monto del crédito",
+    f"Ingresa un monto entre ${format_number(detalles['monto_min'])} y ${format_number(detalles['monto_max'])} COP:",
     min_value=detalles["monto_min"],
     max_value=detalles["monto_max"],
     step=1000,
     value=detalles["monto_min"],
 )
 
-# Slider de plazo
+# Selección del plazo
 if tipo_credito == "LoansiFlex":
-    st.header("Plazo en Meses")
-    plazo = st.slider("Seleccione el plazo (en meses):", 
-                     min_value=detalles["plazo_min"], 
-                     max_value=detalles["plazo_max"], 
-                     step=12,
-                     value=detalles["plazo_min"])
+    st.header("Selecciona el plazo en meses")
+    plazo = st.slider(
+        "Plazo en meses:",
+        min_value=detalles["plazo_min"],
+        max_value=detalles["plazo_max"],
+        step=12,
+        value=detalles["plazo_min"],
+    )
     frecuencia_pago = "Mensual"
 else:
-    st.header("Plazo en Semanas")
-    plazo = st.slider("Seleccione el plazo (en semanas):", 
-                     min_value=detalles["plazo_min"], 
-                     max_value=detalles["plazo_max"], 
-                     step=1,
-                     value=detalles["plazo_min"])
+    st.header("Selecciona el plazo en semanas")
+    plazo = st.slider(
+        "Plazo en semanas:",
+        min_value=detalles["plazo_min"],
+        max_value=detalles["plazo_max"],
+        step=1,
+        value=detalles["plazo_min"],
+    )
     frecuencia_pago = "Semanal"
 
-# Cálculos
+# Cálculos financieros
 aval = monto * detalles["aval_porcentaje"]
 seguro_vida = calcular_seguro_vida(plazo, detalles.get("seguro_vida_base", 0)) if tipo_credito == "LoansiFlex" else 0
 total_financiar = monto + aval + total_costos_asociados + seguro_vida
 
 # Cálculo de cuota
 tasa_mensual = detalles["tasa_anual_efectiva"] / 12 / 100
-
 if tipo_credito == "LoansiFlex":
     cuota = (total_financiar * tasa_mensual) / (1 - (1 + tasa_mensual) ** -plazo)
 else:
-    tasa_semanal = ((1 + detalles["tasa_anual_efectiva"]/100) ** (1/52)) - 1
+    tasa_semanal = ((1 + detalles["tasa_anual_efectiva"] / 100) ** (1 / 52)) - 1
     cuota = (total_financiar * tasa_semanal) / (1 - (1 + tasa_semanal) ** -plazo)
 
-# Mostrar resultado
-st.markdown(f"""
-### Resultado:
-Pagarás {plazo} cuotas de aproximadamente:
-- **Monto por cuota:** $ {format_number(cuota)} {frecuencia_pago}
-""")
+# Resultados
+st.subheader("Resultados del Crédito")
+st.write(f"**Monto total a financiar:** ${format_number(total_financiar)} COP")
+st.write(f"**Número de cuotas:** {plazo} ({frecuencia_pago})")
+st.write(f"**Valor por cuota:** ${format_number(cuota)} COP")
 
 # Detalles del crédito
-st.subheader("Detalles del Crédito")
-st.write(f"**Monto solicitado:** $ {format_number(monto)} COP")
-st.write(f"**Plazo:** {plazo} {'meses' if tipo_credito == 'LoansiFlex' else 'semanas'}")
-st.write(f"**Frecuencia de Pago:** {frecuencia_pago}")
-st.write(f"**Tasa Efectiva Anual (E.A.):** {detalles['tasa_anual_efectiva']:.2f}%")
-st.write(f"**Valor total a financiar:** $ {format_number(total_financiar)} COP")
+st.subheader("Detalles adicionales")
+st.write(f"**Monto solicitado:** ${format_number(monto)} COP")
+st.write(f"**Aval:** ${format_number(aval)} COP")
+st.write(f"**Seguro de vida:** ${format_number(seguro_vida)} COP")
+st.write(f"**Costos asociados:** ${format_number(total_costos_asociados)} COP")
 
 # Disclaimer
 st.info("Estos valores son aproximados y pueden variar según las políticas de Loansi.")
-
