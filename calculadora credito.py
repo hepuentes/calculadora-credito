@@ -1,4 +1,5 @@
 import streamlit as st
+import math
 
 # Función para formatear números con separadores de miles
 def format_number(number):
@@ -180,14 +181,14 @@ aval = monto * detalles["aval_porcentaje"]
 seguro_vida = calcular_seguro_vida(plazo, detalles.get("seguro_vida_base", 0)) if tipo_credito == "LoansiFlex" else 0
 total_financiar = monto + aval + total_costos_asociados + seguro_vida
 
-# Cálculo de cuota con tasa nominal mensual (EA/12)
-tasa_mensual = detalles["tasa_anual_efectiva"] / 12 / 100  # 2.1575%
+# Cálculo de cuota
+tasa_mensual = detalles["tasa_anual_efectiva"] / 12 / 100
 
 if tipo_credito == "LoansiFlex":
-    cuota = (total_financiar * tasa_mensual * (1 + tasa_mensual) ** plazo) / ((1 + tasa_mensual) ** plazo - 1)
+    cuota = (total_financiar * tasa_mensual) / (1 - (1 + tasa_mensual) ** -plazo)
 else:
     tasa_semanal = ((1 + detalles["tasa_anual_efectiva"]/100) ** (1/52)) - 1
-    cuota = (total_financiar * tasa_semanal * (1 + tasa_semanal) ** plazo) / ((1 + tasa_semanal) ** plazo - 1)
+    cuota = (total_financiar * tasa_semanal) / (1 - (1 + tasa_semanal) ** -plazo)
 
 # Mostrar resultado
 st.markdown(f"""
