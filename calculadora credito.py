@@ -1,4 +1,5 @@
 import streamlit as st
+import math
 
 # Función para formatear números con separadores de miles
 def format_number(number):
@@ -24,6 +25,7 @@ LINEAS_DE_CREDITO = {
         "plazo_max": 8,
         "tasa_anual_efectiva": 25.89,
         "aval_porcentaje": 0.12,
+        "seguro_vida_base": 0
     }
 }
 
@@ -37,8 +39,8 @@ COSTOS_ASOCIADOS = {
 total_costos_asociados = sum(COSTOS_ASOCIADOS.values())
 
 def calcular_seguro_vida(plazo, seguro_vida_base):
-    años = plazo // 12
-    return seguro_vida_base * años if años >= 1 else 0
+    años = plazo / 12  # Cambiado de // a / para obtener decimales
+    return seguro_vida_base * math.ceil(años) if años > 0 else 0
 
 # Configuración de la página de Streamlit
 st.set_page_config(page_title="Simulador de Crédito Loansi", layout="wide")
@@ -134,7 +136,7 @@ st.title("Simulador de Crédito Loansi")
 
 # Selección de línea de crédito
 st.header("Selecciona la Línea de Crédito")
-tipo_credito = st.selectbox("", options=list(LINEAS_DE_CREDITO.keys()), index=0, key="select_credito")
+tipo_credito = st.selectbox("", options=list(LINEAS_DE_CREDITO.keys()), index=0)
 detalles = LINEAS_DE_CREDITO[tipo_credito]
 
 st.markdown(f"<p class='description-text'>{detalles['descripcion']}</p>", unsafe_allow_html=True)
@@ -151,8 +153,8 @@ with col2:
                            min_value=detalles["monto_min"],
                            max_value=detalles["monto_max"],
                            step=1000,
-                           format="%d",
-                           key="monto_input")
+                           value=detalles["monto_min"],
+                           format="%d")
 
 # Slider de plazo con estilo mejorado
 if tipo_credito == "LoansiFlex":
@@ -161,7 +163,7 @@ if tipo_credito == "LoansiFlex":
                      min_value=detalles["plazo_min"], 
                      max_value=detalles["plazo_max"], 
                      step=12,
-                     key="slider_meses")
+                     value=detalles["plazo_min"])
     frecuencia_pago = "Mensual"
 else:
     st.header("Plazo en Semanas")
@@ -169,22 +171,22 @@ else:
                      min_value=detalles["plazo_min"], 
                      max_value=detalles["plazo_max"], 
                      step=1,
-                     key="slider_semanas")
+                     value=detalles["plazo_min"])
     frecuencia_pago = "Semanal"
 
 # Cálculos
 aval = monto * detalles["aval_porcentaje"]
-seguro_vida = calcular_seguro_vida(plazo, detalles.get("seguro_vida_base", 0)) if tipo_credito == "LoansiFlex" else 0
+seguro_vida = calcular_seguro_vida(plazo, detalles["seguro_vida_base"])
 total_financiar = monto + aval + total_costos_asociados + seguro_vida
 
 # Cálculo de cuota
 tasa_mensual = detalles["tasa_anual_efectiva"] / 12 / 100
 
 if tipo_credito == "LoansiFlex":
-    cuota = (total_financiar * tasa_mensual) / (1 - (1 + tasa_mensual) ** -plazo)
+    cuota = (total_financiar * tasa_mensual * (1 + tasa_mensual) ** plazo) / ((1 + tasa_mensual) ** plazo - 1)
 else:
-    tasa_semanal = ((1 + tasa_mensual) ** 0.25) - 1
-    cuota = round((total_financiar * tasa_semanal) / (1 - (1 + tasa_semanal) ** -plazo))
+    tasa_semanal = ((1 + detalles["tasa_anual_efectiva"]/100) ** (1/52)) - 1
+    cuota = (total_financiar * tasa_semanal * (1 + tasa_semanal) ** plazo) / ((1 + tasa_semanal) ** plazo - 1)
 
 # Mostrar resultado
 st.markdown(f"""
