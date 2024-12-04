@@ -1,5 +1,4 @@
 import streamlit as st
-import math
 
 # Función para formatear números con separadores de miles
 def format_number(number):
@@ -25,7 +24,6 @@ LINEAS_DE_CREDITO = {
         "plazo_max": 8,
         "tasa_anual_efectiva": 25.89,
         "aval_porcentaje": 0.12,
-        "seguro_vida_base": 0
     }
 }
 
@@ -39,10 +37,10 @@ COSTOS_ASOCIADOS = {
 total_costos_asociados = sum(COSTOS_ASOCIADOS.values())
 
 def calcular_seguro_vida(plazo, seguro_vida_base):
-    años = plazo / 12  # Cambiado de // a / para obtener decimales
-    return seguro_vida_base * math.ceil(años) if años > 0 else 0
+    años = plazo // 12
+    return seguro_vida_base * años if años >= 1 else 0
 
-# Configuración de la página de Streamlit
+# Configuración de la página
 st.set_page_config(page_title="Simulador de Crédito Loansi", layout="wide")
 
 # Estilos CSS
@@ -112,6 +110,7 @@ st.markdown("""
             justify-content: space-between;
             padding: 0.75rem 0;
             border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            color: inherit;
         }
         
         .disclaimer {
@@ -120,6 +119,7 @@ st.markdown("""
             padding: 1.5rem;
             margin-top: 2rem;
             border: 1px solid rgba(0, 0, 0, 0.1);
+            color: inherit;
         }
 
         .disclaimer p {
@@ -127,6 +127,7 @@ st.markdown("""
             line-height: 1.6;
             margin: 0;
             text-align: justify;
+            color: inherit;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -156,7 +157,7 @@ with col2:
                            value=detalles["monto_min"],
                            format="%d")
 
-# Slider de plazo con estilo mejorado
+# Slider de plazo
 if tipo_credito == "LoansiFlex":
     st.header("Plazo en Meses")
     plazo = st.slider("", 
@@ -176,11 +177,11 @@ else:
 
 # Cálculos
 aval = monto * detalles["aval_porcentaje"]
-seguro_vida = calcular_seguro_vida(plazo, detalles["seguro_vida_base"])
+seguro_vida = calcular_seguro_vida(plazo, detalles.get("seguro_vida_base", 0)) if tipo_credito == "LoansiFlex" else 0
 total_financiar = monto + aval + total_costos_asociados + seguro_vida
 
-# Cálculo de cuota
-tasa_mensual = detalles["tasa_anual_efectiva"] / 12 / 100
+# Cálculo de cuota con tasa nominal mensual (EA/12)
+tasa_mensual = detalles["tasa_anual_efectiva"] / 12 / 100  # 2.1575%
 
 if tipo_credito == "LoansiFlex":
     cuota = (total_financiar * tasa_mensual * (1 + tasa_mensual) ** plazo) / ((1 + tasa_mensual) ** plazo - 1)
@@ -196,7 +197,7 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# Detalles del crédito
+# Detalles del crédito simplificados
 with st.expander("Ver Detalles del Crédito"):
     detalles_orden = [
         ("Dinero total desembolsado", f"$ {format_number(monto)} COP"),
