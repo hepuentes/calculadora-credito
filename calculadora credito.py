@@ -40,7 +40,10 @@ def calcular_seguro_vida(plazo, seguro_vida_base):
     años = plazo // 12
     return seguro_vida_base * años if años >= 1 else 0
 
-# Estilos
+# Configuración de la página de Streamlit
+st.set_page_config(page_title="Simulador de Crédito Loansi", layout="wide")
+
+# Estilos CSS
 st.markdown("""
     <style>
         .stSelectbox {
@@ -126,17 +129,18 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-st.markdown("<h1>Simulador de Crédito Loansi</h1>", unsafe_allow_html=True)
+# Título principal
+st.title("Simulador de Crédito Loansi")
 
 # Selección de línea de crédito
-st.markdown("<p style='font-size: 1.4rem; font-weight: 700; margin-bottom: 0.2rem;'>Selecciona la Línea de Crédito</p>", unsafe_allow_html=True)
+st.header("Selecciona la Línea de Crédito")
 tipo_credito = st.selectbox("", options=list(LINEAS_DE_CREDITO.keys()), index=0, key="select_credito")
 detalles = LINEAS_DE_CREDITO[tipo_credito]
 
 st.markdown(f"<p class='description-text'>{detalles['descripcion']}</p>", unsafe_allow_html=True)
 
 # Entrada del monto con símbolo de peso
-st.markdown("<p style='font-size: 1.4rem; font-weight: 700; margin: 1.5rem 0 0.2rem;'>Escribe el valor del crédito</p>", unsafe_allow_html=True)
+st.header("Escribe el valor del crédito")
 st.markdown(f"<p class='value-description'>Ingresa un valor entre $ {format_number(detalles['monto_min'])} y $ {format_number(detalles['monto_max'])} COP</p>", unsafe_allow_html=True)
 
 col1, col2 = st.columns([0.5,20])
@@ -152,7 +156,7 @@ with col2:
 
 # Slider de plazo con estilo mejorado
 if tipo_credito == "LoansiFlex":
-    st.markdown("<p class='plazo-text'>Plazo en Meses</p>", unsafe_allow_html=True)
+    st.header("Plazo en Meses")
     plazo = st.slider("", 
                      min_value=detalles["plazo_min"], 
                      max_value=detalles["plazo_max"], 
@@ -160,7 +164,7 @@ if tipo_credito == "LoansiFlex":
                      key="slider_meses")
     frecuencia_pago = "Mensual"
 else:
-    st.markdown("<p class='plazo-text'>Plazo en Semanas</p>", unsafe_allow_html=True)
+    st.header("Plazo en Semanas")
     plazo = st.slider("", 
                      min_value=detalles["plazo_min"], 
                      max_value=detalles["plazo_max"], 
@@ -182,7 +186,7 @@ else:
     tasa_semanal = ((1 + tasa_mensual) ** 0.25) - 1
     cuota = round((total_financiar * tasa_semanal) / (1 - (1 + tasa_semanal) ** -plazo))
 
-# Mostrar resultado con orden invertido
+# Mostrar resultado
 st.markdown(f"""
 <div class="result-box">
     <p class="result-text">Pagarás {plazo} cuotas por un valor aproximado de:</p>
