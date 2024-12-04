@@ -130,7 +130,7 @@ st.markdown("<h1>Simulador de Crédito Loansi</h1>", unsafe_allow_html=True)
 
 # Selección de línea de crédito
 st.markdown("<p style='font-size: 1.4rem; font-weight: 700; margin-bottom: 0.2rem;'>Selecciona la Línea de Crédito</p>", unsafe_allow_html=True)
-tipo_credito = st.selectbox("", options=LINEAS_DE_CREDITO.keys(), index=0, key="select_credito")
+tipo_credito = st.selectbox("", options=list(LINEAS_DE_CREDITO.keys()), index=0, key="select_credito")
 detalles = LINEAS_DE_CREDITO[tipo_credito]
 
 st.markdown(f"<p class='description-text'>{detalles['descripcion']}</p>", unsafe_allow_html=True)
